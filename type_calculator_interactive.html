@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pokémon Void — Type Calculator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #1a0a2e;
+    color: #e8d5ff;
+    font-family: Verdana, sans-serif;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 1.4em;
+    color: #cc99ff;
+    margin-bottom: 4px;
+    text-shadow: 0 0 20px rgba(160,90,255,0.7);
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 0.78em;
+    color: #9980cc;
+    margin-bottom: 20px;
+  }
+  .custom-badge {
+    display: inline-block;
+    background: rgba(153,102,255,0.2);
+    border: 1px solid rgba(153,102,255,0.4);
+    color: #cc99ff;
+    padding: 1px 7px;
+    border-radius: 10px;
+    font-size: 0.85em;
+  }
+
+  .main-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .panel {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(153,102,255,0.2);
+    border-radius: 10px;
+    padding: 16px;
+  }
+
+  .panel-title {
+    font-size: 0.88em;
+    font-weight: bold;
+    color: #cc99ff;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(153,102,255,0.2);
+  }
+
+  .type-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .type-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 10px;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    font-size: 0.78em;
+    font-weight: bold;
+    font-family: Verdana, sans-serif;
+    color: #fff;
+    transition: all 0.12s;
+    background: rgba(255,255,255,0.07);
+    user-select: none;
+  }
+  .type-btn:hover { filter: brightness(1.2); }
+  .type-btn.selected {
+    border-color: #ffffff;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.2);
+    filter: brightness(1.15);
+  }
+  .type-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .type-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+    flex-shrink: 0;
+  }
+
+  .selected-display {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    min-height: 32px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .sel-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: bold;
+    color: #fff;
+    cursor: pointer;
+  }
+  .sel-pill .x { opacity: 0.7; font-size: 1.1em; }
+  .placeholder { font-size: 0.8em; color: #9980cc; font-style: italic; }
+
+  .clear-btn {
+    background: rgba(153,102,255,0.2);
+    border: 1px solid rgba(153,102,255,0.4);
+    color: #cc99ff;
+    padding: 5px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.75em;
+    font-family: Verdana, sans-serif;
+    margin-left: auto;
+    display: block;
+    margin-top: 10px;
+  }
+  .clear-btn:hover { background: rgba(153,102,255,0.35); }
+
+  /* Results */
+  .results-panel { display: flex; flex-direction: column; gap: 12px; }
+
+  .result-group { }
+  .result-group-title {
+    font-size: 0.82em;
+    font-weight: bold;
+    margin-bottom: 8px;
+    padding-left: 4px;
+  }
+  .result-group-title.t4  { color: #ff6666; }
+  .result-group-title.t2  { color: #ffaa44; }
+  .result-group-title.t1  { color: #aaaaaa; }
+  .result-group-title.th  { color: #66dd88; }
+  .result-group-title.tq  { color: #66aaff; }
+  .result-group-title.t0  { color: #8866aa; }
+
+  .result-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .result-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.78em;
+    font-weight: bold;
+    color: #fff;
+  }
+  .result-empty {
+    font-size: 0.78em;
+    color: #664488;
+    font-style: italic;
+    padding: 4px;
+  }
+
+  .divider {
+    height: 1px;
+    background: rgba(153,102,255,0.15);
+    margin: 4px 0;
+  }
+
+  .placeholder-results {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: #664488;
+    font-size: 0.85em;
+    font-style: italic;
+    text-align: center;
+    gap: 8px;
+  }
+  .placeholder-results .big { font-size: 2em; }
+
+  @media (max-width: 700px) {
+    .main-layout { grid-template-columns: 1fr; }
+    .type-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<h1>🧮 Pokémon Void — Type Calculator</h1>
+<div class="subtitle">
+  Select up to 2 types to see damage modifiers — includes
+  <span class="custom-badge">✦ Cosmic</span> and
+  <span class="custom-badge">✦ Light</span>
+</div>
+
+<div class="main-layout">
+
+  <!-- LEFT: type picker -->
+  <div class="panel">
+    <div class="panel-title">Choose defending Pokémon types (max 2)</div>
+    <div class="selected-display" id="selectedDisplay">
+      <span class="placeholder">No types selected</span>
+    </div>
+    <div class="type-grid" id="typeGrid"></div>
+    <button class="clear-btn" onclick="clearAll()">↺ Clear</button>
+  </div>
+
+  <!-- RIGHT: results -->
+  <div class="panel">
+    <div class="panel-title">Type effectiveness against you</div>
+    <div class="results-panel" id="resultsPanel">
+      <div class="placeholder-results">
+        <div class="big">🛡</div>
+        <div>Select a type to see your weaknesses and resistances</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Type colours ──
+const TC = {
+  Normal:   '#888878', Fire:     '#c03808', Water:    '#1848c8',
+  Electric: '#a88800', Grass:    '#307808', Ice:      '#3898a0',
+  Fighting: '#800808', Poison:   '#701898', Ground:   '#a06820',
+  Flying:   '#4058b8', Psychic:  '#b80848', Bug:      '#688000',
+  Rock:     '#787018', Ghost:    '#382878', Dragon:   '#2800c8',
+  Dark:     '#302820', Steel:    '#708098', Fairy:    '#b84878',
+  Cosmic:   '#3a1a6a', Light:    '#887200'
+};
+
+const TYPES = Object.keys(TC);
+
+// ── ATK table: what each type deals to defenders ──
+// Only non-1× listed. Everything else = 1×
+const ATK = {
+  Normal:   { Rock:0.5, Steel:0.5, Ghost:0 },
+  Fire:     { Fire:0.5, Water:0.5, Rock:0.5, Dragon:0.5, Grass:2, Ice:2, Bug:2, Steel:2 },
+  Water:    { Water:0.5, Grass:0.5, Dragon:0.5, Fire:2, Ground:2, Rock:2 },
+  Electric: { Electric:0.5, Grass:0.5, Dragon:0.5, Ground:0, Water:2, Flying:2 },
+  Grass:    { Fire:0.5, Grass:0.5, Poison:0.5, Flying:0.5, Bug:0.5, Dragon:0.5, Steel:0.5, Water:2, Ground:2, Rock:2 },
+  Ice:      { Water:0.5, Ice:0.5, Steel:0.5, Fire:0.5, Grass:2, Ground:2, Flying:2, Dragon:2 },
+  Fighting: { Poison:0.5, Flying:0.5, Psychic:0.5, Bug:0.5, Fairy:0.5, Ghost:0, Normal:2, Ice:2, Rock:2, Dark:2, Steel:2 },
+  Poison:   { Poison:0.5, Ground:0.5, Rock:0.5, Ghost:0.5, Steel:0, Grass:2, Fairy:2 },
+  Ground:   { Grass:0.5, Bug:0.5, Flying:0, Fire:2, Electric:2, Poison:2, Rock:2, Steel:2 },
+  Flying:   { Electric:0.5, Rock:0.5, Steel:0.5, Grass:2, Fighting:2, Bug:2 },
+  Psychic:  { Psychic:0.5, Steel:0.5, Dark:0, Fighting:2, Poison:2 },
+  Bug:      { Fire:0.5, Fighting:0.5, Flying:0.5, Ghost:0.5, Steel:0.5, Fairy:0.5, Grass:2, Psychic:2, Dark:2 },
+  Rock:     { Fighting:0.5, Ground:0.5, Steel:0.5, Fire:2, Ice:2, Flying:2, Bug:2 },
+  Ghost:    { Normal:0, Dark:0.5, Ghost:2, Psychic:2 },
+  Dragon:   { Steel:0.5, Fairy:0, Dragon:2 },
+  Dark:     { Fighting:0.5, Dark:0.5, Fairy:0.5, Ghost:2, Psychic:2 },
+  Steel:    { Fire:0.5, Water:0.5, Electric:0.5, Steel:0.5, Rock:2, Ice:2, Fairy:2 },
+  Fairy:    { Fire:0.5, Poison:0.5, Steel:0.5, Fighting:2, Dragon:2, Dark:2 },
+  // Cosmic attacking: 2× Fairy, Flying, Fire, Steel | ½× Electric, Bug, Cosmic | 0× Ice
+  Cosmic:   { Fairy:2, Flying:2, Fire:2, Steel:2, Electric:0.5, Bug:0.5, Cosmic:0.5, Ice:0 },
+  // Light attacking: 2× Fighting, Ghost, Cosmic, Dark | ½× Fire, Water, Grass, Ice
+  Light:    { Fighting:2, Ghost:2, Cosmic:2, Dark:2, Fire:0.5, Water:0.5, Grass:0.5, Ice:0.5 }
+};
+
+// ── Build DEF lookup: DEF[defenderType][attackerType] = multiplier ──
+const DEF = {};
+TYPES.forEach(def => {
+  DEF[def] = {};
+  TYPES.forEach(atk => {
+    DEF[def][atk] = (ATK[atk] && ATK[atk][def] !== undefined) ? ATK[atk][def] : 1;
+  });
+});
+
+// Override Cosmic defending:
+// Weak (2×): Bug, Ghost, Psychic, Normal, Light
+// Resist (½×): Steel, Cosmic, Ground, Rock
+// Immune (0×): Fire
+TYPES.forEach(atk => { DEF['Cosmic'][atk] = 1; });
+DEF['Cosmic']['Bug']     = 2;
+DEF['Cosmic']['Ghost']   = 2;
+DEF['Cosmic']['Psychic'] = 2;
+DEF['Cosmic']['Normal']  = 2;
+DEF['Cosmic']['Light']   = 2;
+DEF['Cosmic']['Steel']   = 0.5;
+DEF['Cosmic']['Cosmic']  = 0.5;
+DEF['Cosmic']['Ground']  = 0.5;
+DEF['Cosmic']['Rock']    = 0.5;
+DEF['Cosmic']['Fire']    = 0;
+
+// Override Light defending:
+// Weak (2×): Water, Grass, Ice, Dark
+// Resist (½×): Fighting, Ghost, Cosmic, Fairy
+// Immune (0×): nothing
+TYPES.forEach(atk => { DEF['Light'][atk] = 1; });
+DEF['Light']['Water']   = 2;
+DEF['Light']['Grass']   = 2;
+DEF['Light']['Ice']     = 2;
+DEF['Light']['Dark']    = 2;
+DEF['Light']['Fighting']= 0.5;
+DEF['Light']['Ghost']   = 0.5;
+DEF['Light']['Cosmic']  = 0.5;
+DEF['Light']['Fairy']   = 0.5;
+
+// ── State ──
+let selected = [];
+
+// ── Render type grid ──
+function renderGrid() {
+  const grid = document.getElementById('typeGrid');
+  grid.innerHTML = '';
+  TYPES.forEach(t => {
+    const btn = document.createElement('div');
+    btn.className = 'type-btn' +
+      (selected.includes(t) ? ' selected' : '') +
+      (selected.length >= 2 && !selected.includes(t) ? ' disabled' : '');
+    btn.style.background = selected.includes(t) ? TC[t] : 'rgba(255,255,255,0.07)';
+    btn.style.borderColor = selected.includes(t) ? '#ffffff' : 'transparent';
+    btn.innerHTML = `<div class="type-dot" style="background:${TC[t]};width:12px;height:12px;border-radius:50%;flex-shrink:0;"></div>${t}`;
+    btn.onclick = () => toggleType(t);
+    grid.appendChild(btn);
+  });
+}
+
+// ── Render selected pills ──
+function renderSelected() {
+  const el = document.getElementById('selectedDisplay');
+  el.innerHTML = '';
+  if (selected.length === 0) {
+    el.innerHTML = '<span class="placeholder">No types selected</span>';
+    return;
+  }
+  selected.forEach(t => {
+    const pill = document.createElement('div');
+    pill.className = 'sel-pill';
+    pill.style.background = TC[t];
+    pill.innerHTML = `${t} <span class="x" title="Remove">×</span>`;
+    pill.onclick = () => toggleType(t);
+    el.appendChild(pill);
+  });
+}
+
+// ── Calculate and render results ──
+function renderResults() {
+  const el = document.getElementById('resultsPanel');
+  if (selected.length === 0) {
+    el.innerHTML = `<div class="placeholder-results"><div class="big">🛡</div><div>Select a type to see your weaknesses and resistances</div></div>`;
+    return;
+  }
+
+  const t1 = selected[0], t2 = selected[1] || null;
+  const groups = { '4':[], '2':[], '1':[], '0.5':[], '0.25':[], '0':[] };
+
+  TYPES.forEach(atk => {
+    const m1 = DEF[t1][atk] !== undefined ? DEF[t1][atk] : 1;
+    const m2 = t2 ? (DEF[t2][atk] !== undefined ? DEF[t2][atk] : 1) : 1;
+    const total = m1 * m2;
+    if      (total >= 4)    groups['4'].push(atk);
+    else if (total === 2)   groups['2'].push(atk);
+    else if (total === 1)   groups['1'].push(atk);
+    else if (total === 0.5) groups['0.5'].push(atk);
+    else if (total === 0.25)groups['0.25'].push(atk);
+    else if (total === 0)   groups['0'].push(atk);
+  });
+
+  const defs = [
+    { key:'4',    label:'Takes 4× from',   cls:'t4'  },
+    { key:'2',    label:'Takes 2× from',   cls:'t2'  },
+    { key:'1',    label:'Takes 1× from',   cls:'t1'  },
+    { key:'0.5',  label:'Takes ½× from',   cls:'th'  },
+    { key:'0.25', label:'Takes ¼× from',   cls:'tq'  },
+    { key:'0',    label:'Immune to (0×)',   cls:'t0'  },
+  ];
+
+  el.innerHTML = '';
+  defs.forEach((def, i) => {
+    const types = groups[def.key];
+    // skip empty 1× and empty groups (except show immune always if selected)
+    if (types.length === 0 && def.key === '1') return;
+    if (types.length === 0 && def.key === '4') return;
+    if (types.length === 0 && def.key === '0.25' && !t2) return;
+
+    const group = document.createElement('div');
+    group.className = 'result-group';
+
+    const title = document.createElement('div');
+    title.className = `result-group-title ${def.cls}`;
+    title.textContent = def.label;
+    group.appendChild(title);
+
+    const badges = document.createElement('div');
+    badges.className = 'result-badges';
+
+    if (types.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'result-empty';
+      empty.textContent = 'None';
+      badges.appendChild(empty);
+    } else {
+      types.forEach(t => {
+        const b = document.createElement('div');
+        b.className = 'result-badge';
+        b.style.background = TC[t];
+        b.innerHTML = `<div style="width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.4);flex-shrink:0;"></div>${t}`;
+        badges.appendChild(b);
+      });
+    }
+    group.appendChild(badges);
+
+    if (i < defs.length - 1) {
+      const div = document.createElement('div');
+      div.className = 'divider';
+      group.appendChild(div);
+    }
+
+    el.appendChild(group);
+  });
+}
+
+function toggleType(t) {
+  if (selected.includes(t)) {
+    selected = selected.filter(x => x !== t);
+  } else {
+    if (selected.length >= 2) return;
+    selected.push(t);
+  }
+  renderGrid();
+  renderSelected();
+  renderResults();
+}
+
+function clearAll() {
+  selected = [];
+  renderGrid();
+  renderSelected();
+  renderResults();
+}
+
+// ── Init ──
+renderGrid();
+renderSelected();
+renderResults();
+</script>
+</body>
+</html>
