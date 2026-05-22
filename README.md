@@ -10,7 +10,7 @@ An interactive type weakness calculator for the fan-made Pokémon fangame **Pok�
 
 ## Usage
 Visit the live calculator at:
-`https://vaerethvoid.github.io/TypeCalculator/type_calculator_interactive.html`
+`https://vaerethvoid.github.io/TypeCalculator/type_calculator_interactive.html` when it is done.
 
 ## About
 Built for the Pokémon Void fan game community wiki.
